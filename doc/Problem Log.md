@@ -11,3 +11,18 @@ In this project the only function used is the _chamfer_distance_ from pytorch3D,
 Can use a alternativ [package](https://pypi.org/project/chamferdist/) for computing the chamfer distance or compute a new one to fit the project, cuz the package is a different implementation of the chamfer distance, this my lead to different results than the ones reported in the paper.
 
 ## ...
+
+## MinkowskiEngine / PytorchEMD(DiT-3D) Install issue :( (28.05)
+
+MinkowskiEngine only supported in Ubuntu, there is a possible solution on windows but its cpu only. On colabs it also cant work.
+
+**Possible solutions:**
+try on l3s server only
+
+## rl.exe Error, C++ Compiler
+
+```bash
+subprocess.CalledProcessError: Command '['where', 'cl']' returned non-zero exit status 1
+```
+
+In DiT-3D repo modules dictionary need c++ compiler. But the system can's find rl.exe.
