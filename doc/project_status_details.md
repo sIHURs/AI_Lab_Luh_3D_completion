@@ -26,3 +26,31 @@ subprocess.CalledProcessError: Command '['where', 'cl']' returned non-zero exit 
 ```
 
 In DiT-3D repo modules dictionary need c++ compiler. But the system can's find rl.exe.
+
+`can't solved, try to use l3s server, and focus on theory and coding implementaion in juni (05.06)`
+
+- [ ] diffusion model
+- [ ] transformer
+- [ ] ViT, Vision Transformer
+- [ ] DiT, Diffusion Transformer
+
+## Learning diffuion model coding from stable diffusion (05.06)
+
+stable diffusion, is a text-to-image deep learning model, based on diffusion model, and its a latent diffusion model, in which we don't learn the distribution p(x) of our data set of images, but rather, the distribution of a latent representation of our data by using a Variational Autoencoder (VAE).
+
+Programming content:
+
+- DDPM/ Sampler
+- diffuison process
+- VAE
+- Classifier-Free Guidence
+- Self-Attention/Cross-Attention
+- CLIP
+- U-Net
+- Implementaion of model loader and how to make a pipeline and how to make a training/inference demo.
+
+Source code from [pytorch-stable-diffuison](https://github.com/kjsman/stable-diffusion-pytorch?tab=readme-ov-file)
+
+## Dive deep into [LiDiff](https://github.com/PRBonn/LiDiff?tab=readme-ov-file) (Next)
+
+Find out how the author achieved in code, from shape reconstruction to scene reconstruction.
