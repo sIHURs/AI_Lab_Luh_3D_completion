@@ -50,8 +50,27 @@ The main objective of this project is to use diffusion models for scene completi
 - [ ] ...
 
 ## Recommaned papers
+DDPM:
+-  [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
+- [Understanding Diffusion Models: A Unified Perspective](https://arxiv.org/pdf/2208.11970) - math theory
 
-- [ ] TODO
+Vision Transformer:
+
+- [AN IMAGE IS WORTH 16X16 WORDS: TRANSFORMERS FOR IMAGE RECOGNITION AT SCALE](https://arxiv.org/pdf/2010.11929)
+
+Diffusion Transformer:
+
+- [Scalable Diffusion Models with Transformers](https://arxiv.org/pdf/2212.09748)
+
+PointNet:
+
+- [PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation](https://arxiv.org/pdf/1612.00593)
+
+3D Completion:
+
+- [A CONDITIONAL POINT DIFFUSION-REFINEMENT PARADIGM FOR 3D POINT CLOUD COMPLETION](https://arxiv.org/pdf/2112.03530)
+
+
 
 ## References
 
