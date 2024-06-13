@@ -29,9 +29,9 @@ In DiT-3D repo modules dictionary need c++ compiler. But the system can's find r
 
 `can't solved, try to use l3s server, and focus on theory and coding implementaion in juni (05.06)`
 
-- [ ] diffusion model
-- [ ] transformer
-- [ ] ViT, Vision Transformer
+- [] diffusion model
+- [x] transformer
+- [X] ViT, Vision Transformer
 - [ ] DiT, Diffusion Transformer
 
 ## Learning diffuion model coding from stable diffusion (05.06)
