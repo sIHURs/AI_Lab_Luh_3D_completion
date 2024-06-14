@@ -36,7 +36,8 @@ The main objective of this project is to use diffusion models for scene completi
 ## Project status
 
 - [x] Startup: try SemanticKITTI Dataset, and diffuison model training
-  - [ ] TODO - to document(**Done**: Understand and try some programming on the datasets ShapeNet and KITTI360-test-demo. SemanticKITTI (80GB) is too large to download on my own computer. Use Open3D for visualization and PyntCloud for voxelization.) `13.06`
+  - [x] to document(**Done**: Understand and try some programming on the datasets ShapeNet and KITTI360-test-demo. SemanticKITTI (80GB) is too large to download on my own computer. Use Open3D for visualization and PyntCloud for voxelization.) `13.06`
+  - [ ] ? voxelization module from DiT3D ( actually from PVCnn)
 
 - [ ] TODO - repoduce the results from the two stduies\
 `Device issues can't be resolved, linux system required (PytorchEMD, MinkowskiEngine, pytorch3d)`
