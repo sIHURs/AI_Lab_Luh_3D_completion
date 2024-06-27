@@ -49,6 +49,18 @@ The main objective of this project is to use diffusion models for scene completi
 - [ ] compare the results
   - metrics: $CD$(chamfer distance), $JSD_{BEV}$(jensen-Shannon divergence), $IoU$ (intersection-over-union)
 - [ ] ...
+## Modules
+### pytorchEMD
+PyTorch Wrapper for Earth-Mover-Distance (EMD) for 3D point cloud regression, source from [github](https://github.com/daerduoCarey/PyTorchEMD).
+
+But the TH/THC (`fatal error: THC/THC.h: No such file or directory`) include files have been removed in the latest pytorch version. I removed THC/THC.h and updated all the deprecated functions, you can find code in [here](tryout/PyTorchEMD/).
+
+build with command:
+```bash
+pip install .
+```
+The code is tested on Ubuntu 24.04, pytroch 2.1.2, CUDA 11.8.
+
 
 ## Recommaned papers
 DDPM:

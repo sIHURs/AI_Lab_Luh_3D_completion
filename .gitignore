@@ -1,2 +1,9 @@
 .project-notes.md
 demo_code/
+
+
+__pycache__
+build
+dist
+emd_ext.egg-info
+*.so
