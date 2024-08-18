@@ -61,26 +61,61 @@ pip install .
 
 For generation, dataset `ShapeNetCore.v2.PC15k` can be downloaded [here](https://github.com/stevenygd/PointFlow), which is used in the paper [[2]](#references).
 
-Dataset\
-├── Train\
-│   ├── Class1\
-│   │   ├── image1.jpg\
-│   │   ├── image2.jpg\
-│   └── Class2\
-│       ├── image3.jpg\
-│       ├── image4.jpg\
-├── Validation\
-│   ├── Class1\
-│   │   ├── image5.jpg\
-│   ├── Class2\
-│   │   ├── image6.jpg\
-└── Test\
-    ├── Class1\
-    │   ├── image7.jp\
-    ├── Clas\
-
+```
+ShapeNetCore.v2.PC15k
+├── Category1
+│   ├── train
+│   │   ├── pcd1.npy
+│   │   ├── pcd2.npy
+|   |    ...
+|   ├── test
+|   │   ├── pcd1.npy
+|   │   ├── pcd2.npy
+|   |    ...
+│   └── val
+│       ├── pcd1.npy
+│       ├── pcd2.npy
+|        ...
+├── Category2
+│   ├
+ 
+ ...
+```
 
 For completion, dataset `ShapeNetCompletion` can be downloaded [here](https://gateway.infinitescript.com/s/ShapeNetCompletion)
+
+```
+ShapeNetCompletion
+├── train
+│   ├── complete
+│   │   ├── category1
+|   |   |    ├── pcd1.npy
+|   |   |    ├── pcd2.npy
+|   |   |     ...        
+│   │   ├── category2
+|   |        ...
+│   └── partial
+│       ├── category1
+|       |    ├── pcd1
+|       |    |    ├── 00.npy
+|       |    |    |    ...
+|       |    |    └── 07.npy
+|       |    ├── pcd2
+|       |    |    ├── 00.npy
+|       |    |    |    ...
+|       |    |    └── 07.npy
+|       |    ├── pcd3
+|       |     ...        
+│       ├── category2
+|        ...
+├── test
+│    ...
+└── val
+     ...
+ 
+ ...
+```
+
 
 ## Examples
 
@@ -89,7 +124,7 @@ For completion, dataset `ShapeNetCompletion` can be downloaded [here](https://ga
 
 ## Trained model
 
-- [ ] TODO
+- [ ] TODO upload final trained model weight to google drive
 
 ## Model
 
@@ -139,6 +174,58 @@ In addition, for generative tasks, we only need to specify the object we want to
 Here, the structure and complexity(like the number of ViT Blocks, in the project is setted as 3) of the encoder also significantly impact the final completion results. Other possible structures include encoders like those in PointNet [[3]](#references) or U-Net-based encoders. And the choice of max pooling is motivated by the fact that, as noted in PointNet, due to the unordered nature of point clouds, a symmetric function is needed to aggregate information from all points. It has been demonstrated that when the feature dimensions are sufficiently large, max pooling can approximate any symmetric function f described in the paper. However, in this project, with the use of Transformers, the point clouds are first patchified and positional information is assigned to each patch, it disrupts the unordered nature of the point clouds.. Therefore, other pooling methods could also be considered for the final step.
 
 ## Result
+
+### Traninig
+
+During training, the model weights were saved every 50 epochs. The figure below shows the performance of the model on the validation dataset at each saved checkpoint, with the metric being the 1-NNA Chamfer Distance.
+
+<figure>
+    <img src="assets/Figure_1.png" alt="This is an image">
+    <!-- <figcaption></figcaption> -->
+</figure>
+
+We can observe that during global fine-tuning, the training reached the 300th epoch, the Chamfer Distance did not decrease, the model's performance did not improve.
+
+In the model using adaptformer, we can see that the performance of the model was very noticeable imporoved. The Chamfer Distance decreased significantly from close to 1 at the beginning to a minimum of 0.20. Ultimately, the model weights with the lowest Chamfer Distance were selected for subsequent testing.
+
+The training has currently reached 1200 iterations, starting fine-tuning from the weights at epoch 7650 of the original paper to epoch 8850. For the new added dataset for completion tasl `ShapeNetCompletion` , each complete point cloud corresponds to 8 partial point clouds. If the dataloader outputs the partial and complete point clouds in a one-to-one manner, the memory requirements for the dataloader are very high. In this project, a distributed training approach is used, where each data loader loads only one partial point cloud at a time and trains for 300 epochs (for example, the data loader contains only the partial point cloud with index 00 and its corresponding complete point cloud. The dataset structure is detailed [here](#dataset).). In this project, training was conducted for 300 epochs each for indices 00, 02, 04, and 06 of the partial point cloud.
+
+However, this training approach reduces the computational load on the computer but also result in decreased model accuracy. Additionally, training for 1200 epochs does not ensure that the model has fully converged, and further fine-tuning may still improve the model's accuracy.
+
+- TODO[] finetune using DiffFit ([paper]("https://arxiv.org/pdf/2304.06648))
+
+### Evaluation 
+
+**Evaluation on test dataset - epoch 8649:**
+| 1-NNA-CD | 1-NNA-EMD | Right Aligned | COV-EMD |
+|:-------------|:---------------:|--------------:|--------------:|
+| 0.29         | 0.45       | 0.71          | 0.61          |
+
+**Evaluation on validation dataset - epoch 8649:**
+| 1-NNA-CD | 1-NNA-EMD | Right Aligned | COV-EMD |
+|:-------------|:---------------:|--------------:|--------------:|
+| 0.20     | 0.38         | 0.84        | 0.60        |
+
+**Evaluation on test dataset with sparse point cloud - epoch 8649:**
+
+*(Sparse point clouds are generated by randomly sampling fewer points from the complete point clouds in the test set. In the `ShapeNetCompletion` dataset, partial point clouds are the result of removing a part of the object, but sparse point clouds consist of the entire shape of the object but with very few points.)*
+
+| 1-NNA-CD | 1-NNA-EMD | Right Aligned | COV-EMD |
+|:-------------|:---------------:|--------------:|--------------:|
+| 0.26     | 0.43         | 0.72       | 0.58        |
+
+
+From the data, it is evident that this result still has a significant performance gap compared to the state-of-the-art (SOTA).
+
+### Detailed Case Analysis and visualization
+
+
+
+
+
+
+
+- []TODO Find a suitable baseline to compare the performance gap.
 
 ## Project status
 June:

@@ -2,7 +2,7 @@
 
 .idea
 data
-checkpoints
+# checkpoints
 output
 __pycache__
 *.net
