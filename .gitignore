@@ -1,9 +1,23 @@
-.project-notes.md
-demo_code/
+.DS_Store
 
-
+.idea
+data
+checkpoints
+output
 __pycache__
+*.net
+*.npy
+*.pcd
+*.npz
+*.log
+eval_model
+eval_data
+
+.vscode
+
 build
 dist
-emd_ext.egg-info
+voxel/cuda_voxelization/project_voxelization.egg-info
+voxel/cuda_devoxelization/project_devoxelization.egg-info
+*.egg-info
 *.so
