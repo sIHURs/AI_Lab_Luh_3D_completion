@@ -61,6 +61,25 @@ pip install .
 
 For generation, dataset `ShapeNetCore.v2.PC15k` can be downloaded [here](https://github.com/stevenygd/PointFlow), which is used in the paper [[2]](#references).
 
+Dataset\
+├── Train\
+│   ├── Class1\
+│   │   ├── image1.jpg\
+│   │   ├── image2.jpg\
+│   └── Class2\
+│       ├── image3.jpg\
+│       ├── image4.jpg\
+├── Validation\
+│   ├── Class1\
+│   │   ├── image5.jpg\
+│   ├── Class2\
+│   │   ├── image6.jpg\
+└── Test\
+    ├── Class1\
+    │   ├── image7.jp\
+    ├── Clas\
+
+
 For completion, dataset `ShapeNetCompletion` can be downloaded [here](https://gateway.infinitescript.com/s/ShapeNetCompletion)
 
 ## Examples
