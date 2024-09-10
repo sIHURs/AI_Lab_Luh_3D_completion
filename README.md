@@ -126,7 +126,20 @@ ShapeNetCompletion
 
 - [ ] TODO upload final trained model weight to google drive
 
-## Model
+## Theory Part
+
+### summary of the paper - [DiT-3D: Exploring Plain Diffusion Transformers for 3D Shape Generation](https://arxiv.org/pdf/2307.01831)
+
+The Paper introduces a new method for 3D shape generation called DiT-3D (Diffusion Transformer for 3D shape generation). This method combines the strengths of diffusion models and Transformer architectures to generate high-quality 3D shapes (ShapeNet).Their method extends the diffusion model to the 3D domain for point cloud generation and introduces the 3D Window Attention module. It also fine-tunes using pre-trained data from Vision Transformers, significantly improving training efficiency and achieving state-of-the-art (SOTA) results in point cloud generation.
+
+### New Contributions in This Project
+
+
+The original paper implements the task of point cloud generation. (What is point cloud generation: the model receives a label for an object, such as "car" or "chair," and the model should output a shape that matches human perception of that label). 
+
+
+
+
 
 ### Diffusion model
 DDPM (Denoising Diffusion Probabilistic Models) is a generative model that restores images through a step-by-step denoising process. 
