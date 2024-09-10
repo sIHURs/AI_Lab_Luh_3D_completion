@@ -161,8 +161,8 @@ And due to the increased token length resulting from the additional dimension in
 In this project, AdaptFormer is integrated to fine-tune the existing model weights, adapting the original generative task to a completion task. AdaptFormer is a plug-and-play, lightweight module that adds less than 2% extra parameters to the ViT, while enhancing its transferability without updating its original pre-trained parameters.
 
 <div align="center">
-    <img src="assets/3D-DiT-Gen.png" alt="Image 1" style="width:30%; height:auto;">
-    <img src="assets/DiT-3D.png" alt="Image 1"  style="width:25.5%; height:auto;">
+    <img src="assets/model.png" alt="Image 1" style="width:70%; height:auto;">
+    <!-- <img src="assets/DiT-3D.png" alt="Image 1"  style="width:25.5%; height:auto;"> -->
     <figcaption>Figure 2: The left side shows the model architecture from the original paper, while the right side presents the model architecture used in this project.</figcaption>
 </div>
 
