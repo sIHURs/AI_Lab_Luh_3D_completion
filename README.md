@@ -135,49 +135,57 @@ The Paper introduces a new method for 3D shape generation called DiT-3D (Diffusi
 ### New Contributions in This Project
 
 
-The original paper implements the task of point cloud generation. (What is point cloud generation: the model receives a label for an object, such as "car" or "chair," and the model should output a shape that matches human perception of that label). 
+The original paper implements the task of point cloud generation. (What is point cloud generation: the model receives a classification for an object, such as "car" or "chair," and the model should output a shape that matches human perception of that classification). In generative tasks, the diffusion transformer uses two types of condition embeddings at each layer: the given time step 𝑡 and the object's classification. In this project, the task is to reconstruct incomplete point clouds (i.e., to fill in missing points in an object or enhance the density of sparse point clouds). The condition for this task will shift from the object's classification to the input incomplete point cloud. 
 
-
-
+Main contributions in this project:
+  - Attempted a new embedding for incomplete point clouds based on Vision Transformer blocks.
+  - Using Adaptformer fine-tune the model using the pre-existing weights from the point cloud generation tasks (as provided in the original paper).
 
 
 ### Diffusion model
 DDPM (Denoising Diffusion Probabilistic Models) is a generative model that restores images through a step-by-step denoising process. 
 
-<figure>
-    <img src="assets/ddpm.png" alt="This is an image">
-    <!-- <figcaption>DDPM .</figcaption> -->
+<figure align="center">
+    <img src="assets/ddpm.png" alt="DDPM" style="width:50%; height:auto;">
+    <figcaption>Figure 1: The diagram illustrates how the Denoising Diffusion Probabilistic Model (DDPM) progressively removes noise using the 3D DiT noise predictor. Ultimately, the model generates 3D point clouds that approximate the original data from noise.</figcaption>
 </figure>
-
 
 Assuming there are 1000 timesteps, starting from the original point cloud, random Gaussian noise is added at each step, which called the forward process. During training, the input is the point cloud at time t, along with t and the partial point cloud as conditions. The denoising model predicts the noise, and by subtracting the predicted noise from the noisy input point cloud, and the point cloud at time t-1 is obtained, this process is called the reverse process. This is then compared to the ground truth point cloud at time t-1 obtained in the forward process to calculate the loss. In the inference phase, a fully Gaussian noise point cloud is input, and after 1000 timesteps of the reverse process, the final generated point cloud is obtained.
 
+### Denoise model
 
-
-### Denoise model - Diffusion Transformer
 The Diffusion Transformer builds upon the Vision Transformer by incorporating adaLN-Zero. AdaLN is an extension of standard layer normalization that allows the layer normalization parameters to be dynamically adjusted based on the input data or additional conditional information (such as conditions added to the model, which can include classifications, text, or in this project, partial point clouds).
 
 And due to the increased token length resulting from the additional dimension in 3D space, the computational cost of 3D Transformers can be significantly high. To address this issue, the paper [[2]](#references) introduces an efficient 3D window attention mechanism into the Transformer blocks, enabling the propagation of point-voxel features with efficient memory usage.
 
 In this project, AdaptFormer is integrated to fine-tune the existing model weights, adapting the original generative task to a completion task. AdaptFormer is a plug-and-play, lightweight module that adds less than 2% extra parameters to the ViT, while enhancing its transferability without updating its original pre-trained parameters.
 
-<div style="display: flex; justify-content: center; align-items: center;">
-    <img src="assets/DiT-3D.png" alt="Image 1" width="300" style="margin-right: 10px;">
-    <img src="assets/DiT-3D-Adaptformer.png" alt="Image 2" width="300">
+<div align="center">
+    <img src="assets/3D-DiT-Gen.png" alt="Image 1" style="width:30%; height:auto;">
+    <img src="assets/DiT-3D.png" alt="Image 1"  style="width:25.5%; height:auto;">
+    <figcaption>Figure 2: The left side shows the model architecture from the original paper, while the right side presents the model architecture used in this project.</figcaption>
 </div>
 
+In terms of model architecture, aside from changes in the condition embedding, the rest remains the same as in the original paper. Refer to the embedding section in the bottom right corner of the model architecture diagram, where the original label embedding has been replaced with partial point cloud embedding, the sturcture of partial point cloud embedding is shown in the figure below.
 
-
-
-In addition, for generative tasks, we only need to specify the object we want to generate, i.e., the object’s classification label. However, for completion tasks, we need to input the partial point clouds, which requires an encoder to extract feature tokens from the incomplete point clouds. In this project, the proposed encoder remains consistent with the 3D diffusion transformer: first, it voxelizes the point clouds, then applies patchify to obtain a series of tokens and feeds them into Vision Transformers, and finally uses max pooling to produce a single final token. 
-
-<figure>
-    <img src="assets/contidion encoder.png" alt="This is an image">
-    <!-- <figcaption></figcaption> -->
+<figure align="center">
+    <img src="assets/contidion encoder.png" alt="This is an image" style="width:35%; height:auto;">
+    <figcaption>Figure 3:  the sturcture of partial point cloud embedding</figcaption>
 </figure>
 
+The structure and complexity(like the number of ViT Blocks, in the project is setted as 3) of the encoder also significantly impact the final completion results. Other possible structures include encoders like those in PointNet [[3]](#references) or U-Net-based encoders. And the choice of max pooling is motivated by the fact that, as noted in PointNet, due to the unordered nature of point clouds, a symmetric function is needed to aggregate information from all points. It has been demonstrated that when the feature dimensions are sufficiently large, max pooling can approximate any symmetric function f described in the paper. However, in this project, with the use of Transformers, the point clouds are first patchified and positional information is assigned to each patch, it disrupts the unordered nature of the point clouds.. Therefore, other pooling methods could also be considered for the final step.
 
-Here, the structure and complexity(like the number of ViT Blocks, in the project is setted as 3) of the encoder also significantly impact the final completion results. Other possible structures include encoders like those in PointNet [[3]](#references) or U-Net-based encoders. And the choice of max pooling is motivated by the fact that, as noted in PointNet, due to the unordered nature of point clouds, a symmetric function is needed to aggregate information from all points. It has been demonstrated that when the feature dimensions are sufficiently large, max pooling can approximate any symmetric function f described in the paper. However, in this project, with the use of Transformers, the point clouds are first patchified and positional information is assigned to each patch, it disrupts the unordered nature of the point clouds.. Therefore, other pooling methods could also be considered for the final step.
+
+Finally, The model structure for fine-tuning using the Adaptformer is as follows:
+
+<div align="center">
+    <img src="assets/DiT-3D-Adaptformer.png" alt="Image 2" style="width:35%; height:auto;">
+    <figcaption>Figure 4:  The model structure for fine-tuning using the Adaptformer. The left part contains an encoder-decoder structure block is Adaptformer, the rest corresponds to the model structure described on the right side of Figure 2. The layers shown in yellow contain trainable parameters, while those in blue have frozen parameters. </figcaption>
+</div>
+
+**Hyperparameter:**
+
+
 
 ## Result
 
