@@ -19,7 +19,7 @@ This project will further explore the potential of this model for point cloud co
 
 <figure>
     <img src="assets/example0.png" alt="This is an image">
-    <figcaption>The image above a example from the test set: the left is the partial point cloud, the middle is the ground truth, and the right is the point cloud reconstructed by the model.</figcaption>
+    <figcaption>Figure 1: the left is the partial point cloud, the middle is the ground truth, and the right is the point cloud reconstructed by the model. This pichture is renderd by mitsuba</figcaption>
 </figure>
 
 <!-- (The main objective of this project is to use diffusion models for scene completion from a single 3D LiDAR scan. This project builds on two studies: in the first study [[1]](#references), they used diffusion models and operated directly on points, reformulating the noise and denoise diffusion processes to enable the diffusion model to work efficiently at the scene scale for shape reconstruction. In the second study [[2]](#references), they proposed an innovative Diffusion Transformer for 3D shape generation, replacing the existing U-Net in diffusion models, which significantly improved the quality of 3D shape generation. **The goal of this project is to replace the diffusion model from the first study with the Transformer model from the second study and achieve scene reconstruction.**) -->
@@ -118,13 +118,45 @@ ShapeNetCompletion
 
 
 ## Examples
+### Training
+For training the model (scale type 'DiT-S/4' - Small, patch dim 4) with single gpu, please run
+```bash
+python train_completion.py --distribution_type 'single' --gpu 0 \
+  --dataset PATH_TO_DATASET \
+  --category chair \
+  --expertiment_name FILE_NAME_IN_CHECKPOINT \
+  --model PATH_TO_PRETRAINED_MODEL \
+  --freeze \
+  --model_type 'DiT-S/4' \
+  --window_size 4 --window_block_indexes '0,3,6,9' \
+  --bs 16 \
+  --voxel_size 32 \
+  --lr 1e-4 \
+  --use_tb \
+  --niter FINAL_EPOCH \
+  --saveIter 50 \
+  --diagIter 50 \
+  --vizIter 50
+```
 
-- [ ] TODO - traning
-- [ ] TODO - ...
+For testing the model please run
+```bash
+python test_completion.py --dataroot PATH_TO_DATASET \
+    --category chair --num_classes 1 \
+    --experiment_name FILE_NAME_IN_CHECKPOINT \
+    --niter FINAL_EPOCH \
+    --bs 16 \
+    --model_type 'DiT-S/4' \
+    --voxel_size 32 \
+    --model PATH_TO_MODEL_WEIGHTS \
+    --gpu 0
+```
 
 ## Trained model
 
-- [ ] TODO upload final trained model weight to google drive
+Pretrained model in this project can be downloaded [here](https://drive.google.com/file/d/1rO-5-djSQPIqraG-7XSHlCBTBPN1lLbf/view?usp=drive_link).
+
+The pretrained model from the original paper [DiT-3D] can be downloaded from their [github page](https://github.com/DiT-3D/DiT-3D)
 
 ## Theory Part
 
@@ -133,7 +165,6 @@ ShapeNetCompletion
 The Paper introduces a new method for 3D shape generation called DiT-3D (Diffusion Transformer for 3D shape generation). This method combines the strengths of diffusion models and Transformer architectures to generate high-quality 3D shapes (ShapeNet).Their method extends the diffusion model to the 3D domain for point cloud generation and introduces the 3D Window Attention module. It also fine-tunes using pre-trained data from Vision Transformers, significantly improving training efficiency and achieving state-of-the-art (SOTA) results in point cloud generation.
 
 ### New Contributions in This Project
-
 
 The original paper implements the task of point cloud generation. (What is point cloud generation: the model receives a classification for an object, such as "car" or "chair," and the model should output a shape that matches human perception of that classification). In generative tasks, the diffusion transformer uses two types of condition embeddings at each layer: the given time step 𝑡 and the object's classification. In this project, the task is to reconstruct incomplete point clouds (i.e., to fill in missing points in an object or enhance the density of sparse point clouds). The condition for this task will shift from the object's classification to the input incomplete point cloud. 
 
@@ -147,12 +178,12 @@ DDPM (Denoising Diffusion Probabilistic Models) is a generative model that resto
 
 <figure align="center">
     <img src="assets/ddpm.png" alt="DDPM" style="width:50%; height:auto;">
-    <figcaption>Figure 1: The diagram illustrates how the Denoising Diffusion Probabilistic Model (DDPM) progressively removes noise using the 3D DiT noise predictor. Ultimately, the model generates 3D point clouds that approximate the original data from noise.</figcaption>
+    <figcaption>Figure 2: The diagram illustrates how the Denoising Diffusion Probabilistic Model (DDPM) progressively removes noise using the 3D DiT noise predictor. Ultimately, the model generates 3D point clouds that approximate the original data from noise.</figcaption>
 </figure>
 
 Assuming there are 1000 timesteps, starting from the original point cloud, random Gaussian noise is added at each step, which called the forward process. During training, the input is the point cloud at time t, along with t and the partial point cloud as conditions. The denoising model predicts the noise, and by subtracting the predicted noise from the noisy input point cloud, and the point cloud at time t-1 is obtained, this process is called the reverse process. This is then compared to the ground truth point cloud at time t-1 obtained in the forward process to calculate the loss. In the inference phase, a fully Gaussian noise point cloud is input, and after 1000 timesteps of the reverse process, the final generated point cloud is obtained.
 
-### Denoise model
+### Details in Denoise model
 
 The Diffusion Transformer builds upon the Vision Transformer by incorporating adaLN-Zero. AdaLN is an extension of standard layer normalization that allows the layer normalization parameters to be dynamically adjusted based on the input data or additional conditional information (such as conditions added to the model, which can include classifications, text, or in this project, partial point clouds).
 
@@ -163,14 +194,14 @@ In this project, AdaptFormer is integrated to fine-tune the existing model weigh
 <div align="center">
     <img src="assets/model.png" alt="Image 1" style="width:70%; height:auto;">
     <!-- <img src="assets/DiT-3D.png" alt="Image 1"  style="width:25.5%; height:auto;"> -->
-    <figcaption>Figure 2: The left side shows the model architecture from the original paper, while the right side presents the model architecture used in this project.</figcaption>
+    <figcaption>Figure 3: The left side shows the model architecture from the original paper, while the right side presents the model architecture used in this project.</figcaption>
 </div>
 
 In terms of model architecture, aside from changes in the condition embedding, the rest remains the same as in the original paper. Refer to the embedding section in the bottom right corner of the model architecture diagram, where the original label embedding has been replaced with partial point cloud embedding, the sturcture of partial point cloud embedding is shown in the figure below.
 
 <figure align="center">
     <img src="assets/contidion encoder.png" alt="This is an image" style="width:35%; height:auto;">
-    <figcaption>Figure 3:  the sturcture of partial point cloud embedding</figcaption>
+    <figcaption>Figure 4:  the sturcture of partial point cloud embedding</figcaption>
 </figure>
 
 The structure and complexity(like the number of ViT Blocks, in the project is setted as 3) of the encoder also significantly impact the final completion results. Other possible structures include encoders like those in PointNet [[3]](#references) or U-Net-based encoders. And the choice of max pooling is motivated by the fact that, as noted in PointNet, due to the unordered nature of point clouds, a symmetric function is needed to aggregate information from all points. It has been demonstrated that when the feature dimensions are sufficiently large, max pooling can approximate any symmetric function f described in the paper. However, in this project, with the use of Transformers, the point clouds are first patchified and positional information is assigned to each patch, it disrupts the unordered nature of the point clouds.. Therefore, other pooling methods could also be considered for the final step.
@@ -180,12 +211,55 @@ Finally, The model structure for fine-tuning using the Adaptformer is as follows
 
 <div align="center">
     <img src="assets/DiT-3D-Adaptformer.png" alt="Image 2" style="width:35%; height:auto;">
-    <figcaption>Figure 4:  The model structure for fine-tuning using the Adaptformer. The left part contains an encoder-decoder structure block is Adaptformer, the rest corresponds to the model structure described on the right side of Figure 2. The layers shown in yellow contain trainable parameters, while those in blue have frozen parameters. </figcaption>
+    <figcaption>Figure 5:  The model structure for fine-tuning using the Adaptformer. The left part contains an encoder-decoder structure block is Adaptformer, the rest corresponds to the model structure described on the right side of Figure 2. The layers shown in yellow contain trainable parameters, while those in blue have frozen parameters. </figcaption>
 </div>
 
 **Hyperparameter:**
 
+*The parameters marked out are different from or newly added compared to those in the original paper. Most of the training parameters, such as optimizer parameters and loss functions, use those from the original paper*.
 
+| Hyperparameter | Value |
+|:-------------|:---------------:|
+| architecture design     | DiT + 3D windown attention + `Adaptformer` + `Partial Point Cloud Condition Encoder` (12 DiT blocks in DiT, 3 ViT blocks in condition encoder)        |
+| training iteration count | **1200** |
+| learning rate | 1e-4 |
+| diffusion steps | 1000 |
+| noise scheduler | Linear |
+| sampler scheduler | Uniform |
+| optimizier | AdamW |
+| betas for optimizer | (0.9, 0.999) |
+| weight decay | 0.0 |
+| dropout | 0.0 |
+| loss function | MSE |
+| `the point number of partial point cloud` | `512` |
+| `the point number of complete point cloud` | `2048` |
+| batch size | 16 |
+
+**Sturcture of Partial Point Cloud Condition Encoder**
+| Hyperparameter | Value |
+|:-------------|:---------------:|
+| voxelization resolution | 32 |
+| numbers of BiT Blocks in Partial Point Cloud Condition Encoder | 3 |
+| Pooling | Max Pooling |
+| output token length | 384 |
+
+**Sturcture of Adpatformer**
+| Hyperparameter | Value |
+|:-------------|:---------------:|
+| input dimension of encoder| 384 |
+| hidden dimension | 64 |
+| output dimension of decoder | 384 |
+| activate function | ReLU |
+
+In this project, we initially trained a point cloud completion model based on the diffusion transformer. Since the number of points in the incomplete point cloud is one-fourth of the number of points in the complete point cloud, the number of ViT blocks in the condition embedding can be fewer than the number of DiT blocks in the diffusion model; here, we chose 3 ViT blocks. The pooling method is based on the max pooling used in the encoder of the PointNet model.
+
+
+### Future Work / Potential Performance Improvements
+
+1. Increase the number of ViT blocks or hidden dimension in the parital point cloud condition encoder, but having too many blocks does not necessarily lead to better performance.
+2. Use different pooling methods in the parital point cloud condition encoder.
+3. Try different encoder architectures.
+4. Explore fine-tuning methods other than AdaptFormer, as AdaptFormer may not necessarily perform the best in diffusion models. Refer to the following articles: [DiffFit](https://arxiv.org/pdf/2304.06648)
 
 ## Result
 
@@ -194,8 +268,8 @@ Finally, The model structure for fine-tuning using the Adaptformer is as follows
 During training, the model weights were saved every 50 epochs. The figure below shows the performance of the model on the validation dataset at each saved checkpoint, with the metric being the 1-NNA Chamfer Distance.
 
 <figure>
-    <img src="assets/Figure_1.png" alt="This is an image">
-    <!-- <figcaption></figcaption> -->
+    <img src="assets/train.png" alt="This is an image">
+    <figcaption>Figure 6: Recorded 1-NNA-CD values during training process. The final model weights are selected based on the epoch with the lowest 1-NNA-CD value. Blue line: train with using Adaptformer Fine-Tune. Green line: train with Global Fine-Tune (all the parameter is trainable) </figcaption>
 </figure>
 
 We can observe that during global fine-tuning, the training reached the 300th epoch, the Chamfer Distance did not decrease, the model's performance did not improve.
@@ -206,26 +280,8 @@ The training has currently reached 1200 iterations, starting fine-tuning from th
 
 However, this training approach reduces the computational load on the computer but also result in decreased model accuracy. Additionally, training for 1200 epochs does not ensure that the model has fully converged, and further fine-tuning may still improve the model's accuracy.
 
-- [ ]TODO finetune using DiffFit ([paper]("https://arxiv.org/pdf/2304.06648))
+<!-- - [ ]TODO finetune using DiffFit ([paper]("https://arxiv.org/pdf/2304.06648)) -->
 
-**Summary of training configurations:**
-| Hyperparameter | Value |
-|:-------------|:---------------:|
-| architecture design     | DiT + 3D windown attention + Adaptformer (12 DiT blocks in DiT, 3 ViT blocks in condition encoder)        |
-| iteration count | 1200 |
-| learning rate | 1e-4 |
-| diffusion steps | 1000 |
-| noise scheduler | Linear |
-| sampler scheduler | Uniform |
-| optimizier | AdamW |
-| betas for optimizer | (0.9, 0.999) |
-| weight decay | 0.0 |
-| dropout | 0.0 |
-| loss function | MSE |
-| the point number of partial point cloud | 512 |
-| the point number of complete point cloud | 2048 |
-| batch size | 16 |
-| voxelization resolution | 32 |
 
 ### Evaluation 
 
@@ -271,6 +327,19 @@ In Paper [SpareNet](https://arxiv.org/pdf/2103.02535), their average CD value fo
 The examples above are from the dataset, with the left side showing the point clouds reconstructed by the model and the right side displaying the ground truth. It can be observed that the model possesses a basic ability to restore partial point clouds. The model can distinguish the shapes of objects such as the structure of a chair, including its four legs and backrest (e.g., the first row, first column), the driver's seat of a car (e.g., the third row, third column), a sofa (e.g., the fourth row, second column), and a swivel chair (e.g., the fifth row, first column). And the reconstructed shapes are distinguishable and align with logical expectations.
 
 For basic chair structures (such as those in the first, second, and the first two columns of the third rows), the model's reconstruction is more accurate than for other shapes. However, there are still significant deviations in the details. For example, the chair in the second row, second column, as well as the chairs in the third row, second column, and the fifth row, second column, show discrepancies in the legs compared to the ground truth and fail to cover the input partial point cloud. The car driver's seat only reconstructs a rough shape, missing most of the finer details. The chair in the fourth row, third column, contains structural errors in its reconstruction, and the swivel chair in the fifth row, first column, has incorrect structural reconstruction in the base.
+
+### Model Performance under Different Input Point Counts
+
+<figure>
+    <img src="assets/input points ablation.png" alt="This is an image">
+    <figcaption>Figure 7: The figure shows the performance of different numbers of points from an input partial point cloud, as measured by Chamfer Distance. The x-axis represents the number of points, ranging from 256 to 1792, while the y-axis shows the Chamfer Distance.</figcaption>
+</figure>
+
+The number of points in the partial point cloud during training is 512. When the number of points in the input partial point cloud is 256 or 768, the reconstruction quality remains still optimal. However, when the number of points exceeds 1024, the reconstruction quality significantly deteriorates.
+
+This may seem counterintuitive, as the reconstruction accuracy decreases when more points are input (i.e., when more information is provided). This is because the partial point cloud is only used as a conditional guidance input to the condition embedding, and the final output point cloud is reconstructed from pure noise via the diffusion model, rather than being directly based on the partial point cloud. As an optimization, noise can be added to the input partial point cloud to reach the required number of points, and this can be used as the input noise for the diffusion model, thereby incorporating the original input data. Since this project fine-tunes a model based on pre-existing task-specific weights, the diffusion model still operates by transitioning from pure noise to the final output to maintain consistency.
+
+However, our final goal is still to reconstruct the complete object using the fewest number of points from the partial point cloud. Based on the results from Figure 7, when the number of input points is very small, the reconstruction quality does not degrade.
 
 <!-- #### different levels sampling on partial point cloud
 - [ ]TODO
