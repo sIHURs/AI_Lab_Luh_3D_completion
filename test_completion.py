@@ -455,6 +455,7 @@ def generate_eval(model, opt, gpu, outf_syn, evaluator):
 
     def new_y_chain(device, num_chain, num_classes):
         return torch.randint(low=0,high=num_classes,size=(num_chain,),device=device)
+    print("input points:", opt.condition_npoints)
     
     with torch.no_grad():
 
@@ -467,8 +468,19 @@ def generate_eval(model, opt, gpu, outf_syn, evaluator):
             x = data['test_points'].transpose(1,2)
             m, s = data['mean'].float(), data['std'].float()
             m_part ,s_part = data['part_mean'].float(), data['part_std'].float()
-            y = data['train_partial_points'].transpose(1,2)
-            
+
+            if opt.condition_npoints:
+                y = torch.zeros(x.shape[0], x.shape[1], int(opt.condition_npoints))
+
+                for j in range(x.shape[0]):
+                    indices = torch.randperm(x.shape[2])[:int(opt.condition_npoints)]
+                    y[j] = x[j, :, indices]
+
+                assert y.shape[2] == int(opt.condition_npoints)
+            else:
+                y = data['test_partial_points'].transpose(1,2)
+                assert y.shape[2] == 512
+ 
             gen = model.gen_samples(x.shape, gpu, y, clip_denoised=False).detach().cpu()
 
             gen = gen.transpose(1,2).contiguous()
@@ -484,13 +496,13 @@ def generate_eval(model, opt, gpu, outf_syn, evaluator):
             samples_x.append(x.to(gpu).contiguous())
             samples_y.append(y.to(gpu).contiguous())
 
-            visualize_pointcloud_batch(os.path.join(outf_syn, f'{opt.niter}_{i}_{gpu}_gen.png'), gen, None,
+            visualize_pointcloud_batch(os.path.join(outf_syn, f'{opt.manualSeed}_{opt.condition_npoints}_{i}_{gpu}_gen.png'), gen, None,
                                        None, None)
             
-            visualize_pointcloud_batch(os.path.join(outf_syn, f'{opt.niter}_{i}_{gpu}_gt.png'), x, None,
+            visualize_pointcloud_batch(os.path.join(outf_syn, f'{opt.manualSeed}_{opt.condition_npoints}_{i}_{gpu}_gt.png'), x, None,
                                        None, None)
             
-            visualize_pointcloud_batch(os.path.join(outf_syn, f'{opt.niter}_{i}_{gpu}_part.png'), y, None,
+            visualize_pointcloud_batch(os.path.join(outf_syn, f'{opt.manualSeed}_{opt.condition_npoints}_{i}_{gpu}_part.png'), y, None,
                                        None, None)
                         
             # Compute metrics
@@ -514,6 +526,9 @@ def generate_eval(model, opt, gpu, outf_syn, evaluator):
         torch.save(samples_gather, opt.eval_path)
         torch.save(samples_gather_x, opt.eval_path_x)
         torch.save(samples_gather_y, opt.eval_path_y)
+        
+        results = EMD_CD(samples_gather.to('cuda'), samples_gather_x.to('cuda'), 150, reduced=False)
+        logger.info(results)
 
     return stats
                 
@@ -606,13 +621,15 @@ def test(gpu, opt, output_dir):
         
         if should_diag:
             logger.info("Resume Path:%s" % opt.model)
+            logger.info("The number of points from sparse points cloud:%s" % opt.condition_npoints)
+            logger.info("Seed:%s" % opt.manualSeed)
 
         resumed_param = torch.load(opt.model)
         model.load_state_dict(resumed_param['model_state'])
 
-        opt.eval_path = os.path.join(outf_syn, f'{opt.niter}_samples_gen.pth')
-        opt.eval_path_x = os.path.join(outf_syn, f'{opt.niter}_samples_gt.pth')
-        opt.eval_path_y = os.path.join(outf_syn, f'{opt.niter}_samples_part.pth')
+        opt.eval_path = os.path.join(outf_syn, f'{opt.condition_npoints}_samples_gen.pth')
+        opt.eval_path_x = os.path.join(outf_syn, f'{opt.condition_npoints}_samples_gt.pth')
+        opt.eval_path_y = os.path.join(outf_syn, f'{opt.condition_npoints}_samples_part.pth')
 
         Path(opt.eval_path).parent.mkdir(parents=True, exist_ok=True)
         
@@ -642,6 +659,7 @@ def parse_args():
 
     parser.add_argument('--nc', default=3)
     parser.add_argument('--npoints', default=2048)
+    parser.add_argument('--condition_npoints', default=None)
     parser.add_argument("--voxel_size", type=int, choices=[16, 32, 64], default=32)
 
     '''model'''

@@ -16,5 +16,4 @@ python train_completion.py --distribution_type 'single' --gpu 0\
     --niter 8851 \
     --saveIter 50\
     --diagIter 50 \
-    --vizIter 50 \
-    --manualSeed 1234
+    --vizIter 50

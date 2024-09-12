@@ -11,11 +11,11 @@ With the widespread adoption of 3D scanning devices such as LiDAR, laser scanner
 ### Project's goal
 
 \
-The main objective of this project is to use diffusion models combined with Vision Transformers to complete partial object point clouds. This project is primarily based on the research in [[2]](#references), where they successfully applied the Diffusion Transformer to the task of 3D point cloud generation. 
+The main objective of this project is to use diffusion models combined with Vision Transformers to complete partial object point clouds. This project is primarily based on the research in [[2]DiT-3D](#references), where they successfully applied the Diffusion Transformer to the task of 3D point cloud generation. 
 
 This project will further explore the potential of this model for point cloud completion by introducing a new conditional encoder for partial point clouds and incorporating AdaptFormer to improve the efficiency of model fine-tuning.
 
-*(Clarify: The original objective was to complete scene point clouds based on the work in paper [[1]](#references). The goal was to explore the potential of using a Transformer, instead of the U-Net used in the diffusion model of that paper, for scene point cloud completion within the same framework. However, due to the large size of scene point cloud data, which demands very high GPU and CPU RAM capacity, the hardware performance was insufficient to meet the requirements. Therefore, the focus was shifted to the aforementioned goal.)*
+*(Clarify: The original objective was to complete scene point clouds based on the work in paper [[1]LiDiff](#references). The goal was to explore the potential of using a Transformer, instead of the U-Net used in the diffusion model of that paper, for scene point cloud completion within the same framework. However, due to the large size of scene point cloud data, which demands very high GPU and CPU RAM capacity, the hardware performance was insufficient to meet the requirements. Therefore, the focus was shifted to the aforementioned goal.)*
 
 <figure>
     <img src="assets/example0.png" alt="This is an image">
@@ -59,7 +59,7 @@ pip install .
 
 ## Dataset
 
-For generation, dataset `ShapeNetCore.v2.PC15k` can be downloaded [here](https://github.com/stevenygd/PointFlow), which is used in the paper [[2]](#references).
+For generation, dataset `ShapeNetCore.v2.PC15k` can be downloaded [here](https://github.com/stevenygd/PointFlow), which is used in the paper [[2]DiT-3D](#references).
 
 ```
 ShapeNetCore.v2.PC15k
@@ -156,7 +156,7 @@ python test_completion.py --dataroot PATH_TO_DATASET \
 
 Pretrained model in this project can be downloaded [here](https://drive.google.com/file/d/1rO-5-djSQPIqraG-7XSHlCBTBPN1lLbf/view?usp=drive_link).
 
-The pretrained model from the original paper [DiT-3D] can be downloaded from their [github page](https://github.com/DiT-3D/DiT-3D)
+The pretrained model from the original paper [DiT-3D](https://arxiv.org/pdf/2307.01831) can be downloaded from their [github page](https://github.com/DiT-3D/DiT-3D)
 
 ## Theory Part
 
@@ -187,7 +187,7 @@ Assuming there are 1000 timesteps, starting from the original point cloud, rando
 
 The Diffusion Transformer builds upon the Vision Transformer by incorporating adaLN-Zero. AdaLN is an extension of standard layer normalization that allows the layer normalization parameters to be dynamically adjusted based on the input data or additional conditional information (such as conditions added to the model, which can include classifications, text, or in this project, partial point clouds).
 
-And due to the increased token length resulting from the additional dimension in 3D space, the computational cost of 3D Transformers can be significantly high. To address this issue, the paper [[2]](#references) introduces an efficient 3D window attention mechanism into the Transformer blocks, enabling the propagation of point-voxel features with efficient memory usage.
+And due to the increased token length resulting from the additional dimension in 3D space, the computational cost of 3D Transformers can be significantly high. To address this issue, the paper [[2]DiT-3D](#references) introduces an efficient 3D window attention mechanism into the Transformer blocks, enabling the propagation of point-voxel features with efficient memory usage.
 
 In this project, AdaptFormer is integrated to fine-tune the existing model weights, adapting the original generative task to a completion task. AdaptFormer is a plug-and-play, lightweight module that adds less than 2% extra parameters to the ViT, while enhancing its transferability without updating its original pre-trained parameters.
 
@@ -204,7 +204,7 @@ In terms of model architecture, aside from changes in the condition embedding, t
     <figcaption>Figure 4:  the sturcture of partial point cloud embedding</figcaption>
 </figure>
 
-The structure and complexity(like the number of ViT Blocks, in the project is setted as 3) of the encoder also significantly impact the final completion results. Other possible structures include encoders like those in PointNet [[3]](#references) or U-Net-based encoders. And the choice of max pooling is motivated by the fact that, as noted in PointNet, due to the unordered nature of point clouds, a symmetric function is needed to aggregate information from all points. It has been demonstrated that when the feature dimensions are sufficiently large, max pooling can approximate any symmetric function f described in the paper. However, in this project, with the use of Transformers, the point clouds are first patchified and positional information is assigned to each patch, it disrupts the unordered nature of the point clouds.. Therefore, other pooling methods could also be considered for the final step.
+The structure and complexity(like the number of ViT Blocks, in the project is setted as 3) of the encoder also significantly impact the final completion results. Other possible structures include encoders like those in PointNet [[3]PointNet](#references) or U-Net-based encoders. And the choice of max pooling is motivated by the fact that, as noted in PointNet, due to the unordered nature of point clouds, a symmetric function is needed to aggregate information from all points. It has been demonstrated that when the feature dimensions are sufficiently large, max pooling can approximate any symmetric function f described in the paper. However, in this project, with the use of Transformers, the point clouds are first patchified and positional information is assigned to each patch, it disrupts the unordered nature of the point clouds.. Therefore, other pooling methods could also be considered for the final step.
 
 
 Finally, The model structure for fine-tuning using the Adaptformer is as follows:
@@ -259,7 +259,7 @@ In this project, we initially trained a point cloud completion model based on th
 1. Increase the number of ViT blocks or hidden dimension in the parital point cloud condition encoder, but having too many blocks does not necessarily lead to better performance.
 2. Use different pooling methods in the parital point cloud condition encoder.
 3. Try different encoder architectures.
-4. Explore fine-tuning methods other than AdaptFormer, as AdaptFormer may not necessarily perform the best in diffusion models. Refer to the following articles: [DiffFit](https://arxiv.org/pdf/2304.06648)
+4. Explore fine-tuning methods other than AdaptFormer, as AdaptFormer may not necessarily perform the best in diffusion models. Refer to the following articles: [[4]DiffFit](https://arxiv.org/pdf/2304.06648)
 
 ## Result
 
@@ -282,33 +282,34 @@ However, this training approach reduces the computational load on the computer b
 
 <!-- - [ ]TODO finetune using DiffFit ([paper]("https://arxiv.org/pdf/2304.06648)) -->
 
-
-### Evaluation 
-
 **Evaluation on test dataset - epoch 8649:**
+
+*The evaluation data is in the format of mean/variance, mean and variance calculated under four different seeds - 0, 1, 42, 123*
+
 | CD Average⭣ | EMD Average⭣ | f1 Average⭣| 1-NNA-CD⭣ | 1-NNA-EMD⭣ | COV-CD⭡ | COV-EMD⭡ |
 |:-------------|:---------------:|--------------:|--------------:|--------------:|--------------:|--------------:|
-| 0.0032 |60.0785 | 0.6358 | 0.29         | 0.45       | 0.71          | 0.61          | 
+| 0.0032/2.250e-08 |55.97/1.194e+00 | 0.6294/4.875e-05 | 0.4386/3.7550e-04         | 0.4928/4.268e-03      |  0.5842/1.135e-04          | 0.5772/1.163e-03          | 
 
-**Evaluation on validation dataset - epoch 8649:**
+<!-- **Evaluation on validation dataset - epoch 8649:**
 |CD Average⭣ |EMD Average⭣ | f1 Average⭣ | 1-NNA-CD⭣ | 1-NNA-EMD⭣ | COV-ECD⭡ | COV-EMD⭡ |
 |:-------------|:---------------:|--------------:|--------------:|--------------:|--------------:|--------------:|
-| 0.0027 | 60.0288 | 0.6939 | 0.20     | 0.38         | 0.84        | 0.60        |
+| 0.0027 | 60.0288 | 0.6939 | 0.20     | 0.38         | 0.84        | 0.60        | -->
 
 **Evaluation on test dataset with sparse point cloud - epoch 8649:**
 
+*The evaluation data is in the format of mean/variance, mean and variance calculated under four different seeds - 0, 1, 42, 123*
+
 |CD Averagee⭣ | EMD Average⭣ | f1 Average⭣ | 1-NNA-CD⭣ | 1-NNA-EMD⭣ | COV-CD⭡ | COV-EMD⭡ |
 |:-------------|:---------------:|--------------:|--------------:|--------------:|--------------:|--------------:|
-| 0.0028 | 57.3172 |0.6759| 0.26         | 0.43       | 0.71          | 0.58          |
+| 0.0027/6.667e-09 | 53.10/1.793e+00 |0.6802/7.775e-05| 0.4023/7.254e-04         | 0.4641/3.805e-04       | 0.6274/1.532e-03          | 0.5859/3.954e-04          |
 
 (⭣ means the lower the better, ⭡ means the higher the better)
-
 *(Sparse point clouds are generated by randomly sampling fewer points from the complete point clouds in the test set. In the `ShapeNetCompletion` dataset, partial point clouds are the result of removing a part of the object, but sparse point clouds consist of the entire shape of the object but with very few points.)*
 
 
-From the data, it is evident that this result still has a significant performance gap compared to the state-of-the-art (SOTA).
+From the data, it is evident that this result has a significant performance gap compared to the state-of-the-art (SOTA).
 
-- [ ]TODO Find a suitable baseline to compare the performance gap.
+<!-- - [ ]TODO Find a suitable baseline to compare the performance gap. -->
 
 In Paper [SpareNet](https://arxiv.org/pdf/2103.02535), their average CD value for the chair category is 0.000616.
 
@@ -418,3 +419,5 @@ PointNet:
 2. [Mo, S., Xie, E., Chu, R., Hong, L., Niessner, M., & Li, Z. (2024). Dit-3d: Exploring plain diffusion transformers for 3d shape generation. Advances in Neural Information Processing Systems, 36.](https://arxiv.org/abs/2307.01831)
 
 3. [Qi C R, Su H, Mo K, et al. Pointnet: Deep learning on point sets for 3d classification and segmentation[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2017: 652-660.](https://arxiv.org/pdf/1612.00593)
+
+4. [Xie E, Yao L, Shi H, et al. Difffit: Unlocking transferability of large diffusion models via simple parameter-efficient fine-tuning[C]//Proceedings of the IEEE/CVF International Conference on Computer Vision. 2023: 4230-4239.](https://arxiv.org/pdf/2304.06648)
