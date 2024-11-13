@@ -139,6 +139,7 @@ python train_completion.py --distribution_type 'single' --gpu 0 \
   --vizIter 50
 ```
 
+### Testing
 For testing the model please run
 ```bash
 python test_completion.py --dataroot PATH_TO_DATASET \
